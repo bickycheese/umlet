@@ -5,13 +5,12 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.baselet.control.constants.SystemInfo;
 import com.baselet.control.enums.Os;
 import com.baselet.control.enums.Program;
 import com.baselet.element.interfaces.GridElement;
+import com.baselet.util.logging.Logger;
+import com.baselet.util.logging.LoggerFactory;
 
 public class Path {
 

@@ -25,6 +25,7 @@ import static com.baselet.control.constants.MenuConstants.NEW_FROM_TEMPLATE;
 import static com.baselet.control.constants.MenuConstants.ONLINE_HELP;
 import static com.baselet.control.constants.MenuConstants.ONLINE_SAMPLE_DIAGRAMS;
 import static com.baselet.control.constants.MenuConstants.OPEN;
+import static com.baselet.control.constants.MenuConstants.OPEN_LINK;
 import static com.baselet.control.constants.MenuConstants.OPTIONS;
 import static com.baselet.control.constants.MenuConstants.PASTE;
 import static com.baselet.control.constants.MenuConstants.PRINT;
@@ -43,6 +44,7 @@ import static com.baselet.control.constants.MenuConstants.VIDEO_TUTORIAL;
 
 import java.awt.MouseInfo;
 import java.awt.Point;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -61,6 +63,7 @@ import com.baselet.diagram.SelectorOld;
 import com.baselet.diagram.io.ClassChooser;
 import com.baselet.element.facet.common.GroupFacet;
 import com.baselet.element.facet.common.LayerFacet;
+import com.baselet.element.facet.common.LinkFacet;
 import com.baselet.element.interfaces.GridElement;
 import com.baselet.element.old.custom.CustomElement;
 import com.baselet.generator.ClassDiagramConverter;
@@ -241,6 +244,19 @@ public class MenuFactory {
 						valueMap.put(e, Integer.toString(e.getLayer() + change));
 					}
 					actualHandler.getController().executeCommand(new ChangeElementSetting(LayerFacet.KEY, valueMap));
+				}
+				else if (menuItem.equals(OPEN_LINK) && actualHandler != null && actualSelector != null) {
+					String absoluteLink = main.getEditedGridElement().getSetting(LinkFacet.LINK);
+					File link = new File(absoluteLink);
+					if (!link.isAbsolute()) {
+						String parentDir = new File(actualHandler.getFileHandler().getFullPathName()).getParent(); // relative paths are relative to the currently opened diagram
+						try {
+							absoluteLink = new File(parentDir + "/" + absoluteLink).getCanonicalFile().getAbsolutePath();
+						} catch (Exception ex) {
+							throw new RuntimeException("Cannot get link path", ex);
+						}
+					}
+					main.doOpen(absoluteLink);
 				}
 			}
 		});

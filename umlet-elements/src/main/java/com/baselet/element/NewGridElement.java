@@ -9,8 +9,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.baselet.util.logging.Logger;
+import com.baselet.util.logging.LoggerFactory;
 
 import com.baselet.control.SharedUtils;
 import com.baselet.control.basics.geom.Dimension;
@@ -30,6 +30,7 @@ import com.baselet.diagram.draw.helper.ColorOwn;
 import com.baselet.diagram.draw.helper.ColorOwn.Transparency;
 import com.baselet.diagram.draw.helper.theme.Theme;
 import com.baselet.diagram.draw.helper.theme.ThemeFactory;
+import com.baselet.diagram.draw.helper.theme.ThemeFactory.THEMES;
 import com.baselet.element.facet.Facet;
 import com.baselet.element.facet.KeyValueFacet;
 import com.baselet.element.facet.PropertiesParserState;
@@ -159,7 +160,11 @@ public abstract class NewGridElement implements GridElement {
 		drawer.setBackgroundColor(currentTheme.getColor(Theme.ColorStyle.SELECTION_BG));
 		drawer.drawRectangle(0, 0, getRealSize().width, getRealSize().height);
 		if (SharedConfig.getInstance().isDev_mode()) {
-			drawer.setForegroundColor(currentTheme.getColor(Theme.PredefinedColors.BLACK));
+			if (ThemeFactory.getActiveThemeEnum() == THEMES.DARK) {
+				drawer.setForegroundColor(currentTheme.getColor(Theme.PredefinedColors.WHITE));
+			} else {
+				drawer.setForegroundColor(currentTheme.getColor(Theme.PredefinedColors.BLACK));
+			}
 			drawer.setFontSize(10.5);
 			drawer.print(getId().toString(), new PointDouble(getRealSize().width - 3, getRealSize().height - 2), AlignHorizontal.RIGHT);
 		}

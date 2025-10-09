@@ -1,5 +1,6 @@
 package com.baselet.gui;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridLayout;
@@ -18,9 +19,6 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.UIManager.LookAndFeelInfo;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.baselet.control.Main;
 import com.baselet.control.config.Config;
 import com.baselet.control.config.SharedConfig;
@@ -28,6 +26,10 @@ import com.baselet.control.constants.Constants;
 import com.baselet.control.enums.Program;
 import com.baselet.control.enums.RuntimeType;
 import com.baselet.diagram.DiagramHandler;
+import com.baselet.diagram.draw.helper.theme.ThemeFactory;
+import com.baselet.diagram.draw.helper.theme.ThemeFactory.THEMES;
+import com.baselet.util.logging.Logger;
+import com.baselet.util.logging.LoggerFactory;
 
 @SuppressWarnings("serial")
 public class OptionPanel extends JPanel implements ActionListener {
@@ -48,6 +50,8 @@ public class OptionPanel extends JPanel implements ActionListener {
 	private final JCheckBox enable_custom_elements = new JCheckBox();
 	private final JCheckBox checkForUpdates = new JCheckBox();
 	private final JCheckBox developerMode = new JCheckBox();
+	private final JCheckBox propertiesPanelLineWrap = new JCheckBox();
+	private final JCheckBox propertiesPanelLineNumbers = new JCheckBox();
 	private final JTextField pdfFont = new HintTextField("Path to font e.g.; c:/windows/fonts/msgothic.ttc,1");
 	private final JTextField pdfFontBold = new HintTextField("same as above but used for bold text");
 	private final JTextField pdfFontItalic = new HintTextField("same as above but used for italic text");
@@ -55,6 +59,7 @@ public class OptionPanel extends JPanel implements ActionListener {
 	private final JComboBox ui_manager;
 	private final JComboBox default_fontsize = new JComboBox(new Integer[] { 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20 });
 	private final JComboBox propertiesPanelFontsize = new JComboBox(new Integer[] { 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20 });
+	private final JComboBox<String> uiScale = new JComboBox<>(new String[] { "Default", "1", "1.5", "2", "2.5", "3", "3.5", "4" });
 	private final JComboBox exportScale = new JComboBox(new Integer[] { 1, 2, 3, 4, 5, 6, 7, 8 });
 	private final JComboBox default_fontfamily = new JComboBox(Constants.fontFamilyList.toArray(new String[Constants.fontFamilyList.size()]));
 
@@ -88,6 +93,16 @@ public class OptionPanel extends JPanel implements ActionListener {
 		this.add(default_fontsize);
 		this.add(new JLabel("Properties panel fontsize (requires restart)"));
 		this.add(propertiesPanelFontsize);
+		this.add(new JLabel("Properties panel line wrap (requires restart)"));
+		this.add(propertiesPanelLineWrap);
+		this.add(new JLabel("Properties panel line numbers (requires restart)"));
+		this.add(propertiesPanelLineNumbers);
+		JLabel uiScaleLabel = new JLabel("UI Scale for hi res monitors (requires restart)");
+		String uiScaleToolTip = "Overwrite the default scaling which is determined by your OS (some OS only accept integers)";
+		uiScaleLabel.setToolTipText(uiScaleToolTip);
+		uiScale.setToolTipText(uiScaleToolTip);
+		this.add(uiScaleLabel);
+		this.add(uiScale);
 		this.add(new JLabel("Export Scale for image export"));
 		this.add(exportScale);
 		this.add(new JLabel("Default fontfamily"));
@@ -136,11 +151,14 @@ public class OptionPanel extends JPanel implements ActionListener {
 		show_stickingpolygon.setSelected(SharedConfig.getInstance().isShow_stickingpolygon());
 		show_grid.setSelected(Config.getInstance().isShow_grid());
 		enable_custom_elements.setSelected(Config.getInstance().isEnable_custom_elements());
+		propertiesPanelLineWrap.setSelected(Config.getInstance().isPropertiesPanelLineWrap());
+		propertiesPanelLineNumbers.setSelected(Config.getInstance().isPropertiesPanelLineNumbers());
 		checkForUpdates.setSelected(Config.getInstance().isCheckForUpdates());
 		developerMode.setSelected(SharedConfig.getInstance().isDev_mode());
 		ui_manager.setSelectedIndex(uis_technicalNames.indexOf(Config.getInstance().getUiManager()));
 		default_fontsize.setSelectedItem(Config.getInstance().getDefaultFontsize());
 		propertiesPanelFontsize.setSelectedItem(Config.getInstance().getPropertiesPanelFontsize());
+		uiScale.setSelectedItem(Config.getInstance().getUiScale());
 		exportScale.setSelectedItem(Config.getInstance().getExportScale());
 		default_fontfamily.setSelectedItem(Config.getInstance().getDefaultFontFamily());
 		pdfFont.setText(Config.getInstance().getPdfExportFont());
@@ -170,6 +188,8 @@ public class OptionPanel extends JPanel implements ActionListener {
 			SharedConfig.getInstance().setShow_stickingpolygon(show_stickingpolygon.isSelected());
 			Config.getInstance().setShow_grid(show_grid.isSelected());
 			Config.getInstance().setEnable_custom_elements(enable_custom_elements.isSelected());
+			Config.getInstance().setPropertiesPanelLineWrap(propertiesPanelLineWrap.isSelected());
+			Config.getInstance().setPropertiesPanelLineNumbers(propertiesPanelLineNumbers.isSelected());
 			Config.getInstance().setCheckForUpdates(checkForUpdates.isSelected());
 			SharedConfig.getInstance().setDev_mode(developerMode.isSelected());
 			Config.getInstance().setDefaultFontsize((Integer) default_fontsize.getSelectedItem());
@@ -181,6 +201,7 @@ public class OptionPanel extends JPanel implements ActionListener {
 			String newui = uis_technicalNames.get(ui_manager.getSelectedIndex());
 			// only set look and feel if it has changed, because it messes up frame-size
 			if (newui != null && !newui.equals(Config.getInstance().getUiManager())) {
+				ThemeFactory.changeTheme(newui.equals(Constants.FLAT_DARCULA_THEME) ? THEMES.DARK : THEMES.LIGHT, null, true);
 				Config.getInstance().setUiManager(newui);
 				CurrentGui.getInstance().getGui().setLookAndFeel(newui, optionframe);
 			}
@@ -189,9 +210,16 @@ public class OptionPanel extends JPanel implements ActionListener {
 			for (DiagramHandler d : Main.getInstance().getDiagramsAndPalettes()) {
 				d.getFontHandler().resetFontSize();
 				d.getDrawPanel().updateElements();
+				if (ThemeFactory.getActiveThemeEnum() == THEMES.DARK) {
+					d.getDrawPanel().setBackground(Constants.DARK_BACKGROUND_COLOR);
+				}
+				else {
+					d.getDrawPanel().setBackground(Color.WHITE);
+				}
 				d.getDrawPanel().repaint();
 			}
 			Config.getInstance().setPropertiesPanelFontsize((Integer) propertiesPanelFontsize.getSelectedItem());
+			Config.getInstance().setUiScale((String) uiScale.getSelectedItem());
 			Config.getInstance().setExportScale((Integer) exportScale.getSelectedItem());
 
 			String newfamily = (String) default_fontfamily.getSelectedItem();

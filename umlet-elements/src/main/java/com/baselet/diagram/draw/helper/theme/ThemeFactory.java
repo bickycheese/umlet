@@ -1,9 +1,9 @@
 package com.baselet.diagram.draw.helper.theme;
 
-import com.baselet.diagram.draw.helper.ColorOwn;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import com.baselet.diagram.draw.helper.ColorOwn;
 
 public class ThemeFactory {
 	public enum THEMES {

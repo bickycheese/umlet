@@ -1,5 +1,6 @@
 package com.baselet.gui.pane;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.FlowLayout;
 import java.util.ArrayList;
@@ -23,7 +24,10 @@ import org.fife.ui.rsyntaxtextarea.TokenTypes;
 import org.fife.ui.rtextarea.RTextScrollPane;
 
 import com.baselet.control.basics.Converter;
+import com.baselet.control.config.Config;
 import com.baselet.control.config.DerivedConfig;
+import com.baselet.control.config.SharedConfig;
+import com.baselet.control.constants.Constants;
 import com.baselet.diagram.CurrentDiagram;
 import com.baselet.diagram.draw.helper.theme.Theme;
 import com.baselet.diagram.draw.helper.theme.ThemeFactory;
@@ -64,7 +68,7 @@ public class OwnSyntaxPane {
 				CurrentDiagram.getInstance().getDiagramHandler().getController().redo();
 			}
 		};
-
+		setLineHighlightColor(Config.getInstance().getUiManager().equals(Constants.FLAT_DARCULA_THEME));
 		// Setup highlighting
 		createHightLightMap();
 		AbstractTokenMakerFactory atmf = (AbstractTokenMakerFactory) TokenMakerFactory.getDefaultInstance();
@@ -84,15 +88,30 @@ public class OwnSyntaxPane {
 		propertyLabel.setFont(DerivedConfig.getPanelHeaderFont());
 		panel.add(propertyLabel);
 
+		textArea.setLineWrap(Config.getInstance().isPropertiesPanelLineWrap());
+		textArea.setWrapStyleWord(Config.getInstance().isPropertiesPanelLineWrap());
 		textArea.setAntiAliasingEnabled(true);
 		textArea.setFont(DerivedConfig.getPanelContentFont());
-		scrollPane = new RTextScrollPane(textArea, false);
+		if (Config.getInstance().getUiManager().equals(Constants.FLAT_DARCULA_THEME)) {
+			textArea.setBackground(Constants.DARK_BACKGROUND_COLOR);
+			textArea.setForeground(Color.lightGray);
+		}
+		scrollPane = new RTextScrollPane(textArea, Config.getInstance().isPropertiesPanelLineNumbers());
 		scrollPane.setAlignmentX(Component.LEFT_ALIGNMENT);
 		scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
 		scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		panel.add(scrollPane);
 
 		textArea.getDocument().putProperty(PlainDocument.tabSizeAttribute, 3); // Reduce tab size
+	}
+
+	public void setLineHighlightColor(boolean darkMode) {
+		if (darkMode) {
+			textArea.setCurrentLineHighlightColor(new Color(153, 102, 0));
+		}
+		else {
+			textArea.setCurrentLineHighlightColor(new Color(255, 255, 153));
+		}
 	}
 
 	/**

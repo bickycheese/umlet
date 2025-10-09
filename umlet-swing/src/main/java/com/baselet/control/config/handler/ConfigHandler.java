@@ -17,6 +17,7 @@ import com.baselet.control.config.ConfigClassGen;
 import com.baselet.control.config.ConfigMail;
 import com.baselet.control.config.SharedConfig;
 import com.baselet.control.enums.Program;
+import com.baselet.control.enums.RuntimeType;
 import com.baselet.control.enums.generator.FieldOptions;
 import com.baselet.control.enums.generator.MethodOptions;
 import com.baselet.control.enums.generator.SignatureOptions;
@@ -29,6 +30,7 @@ public class ConfigHandler {
 
 	private static final String PROGRAM_VERSION = "program_version";
 	private static final String PROPERTIES_PANEL_FONTSIZE = "properties_panel_fontsize";
+	private static final String UI_SCALE = "ui_scale"; // #430: scales the UI (e.g. for hidpi monitors)
 	private static final String EXPORT_SCALE = "export_scale"; // #510: scales exported images by this factor (default=1, e.g. 2 doubles the amount of pixels)
 	private static final String EXPORT_DPI = "export_dpi"; // #510: if set, and the image format supports it (e.g. png), this dpi value is stored in the img metadata (default=null which means no dpi value is stored)
 	private static final String DEFAULT_FONTSIZE = "default_fontsize";
@@ -36,6 +38,8 @@ public class ConfigHandler {
 	private static final String SHOW_STICKINGPOLYGON = "show_stickingpolygon";
 	private static final String SHOW_GRID = "show_grid";
 	private static final String ENABLE_CUSTOM_ELEMENTS = "enable_custom_elements";
+	private static final String PROPERTIES_PANEL_LINE_WRAP = "properties_panel_line_wrap";
+	private static final String PROPERTIES_PANEL_LINE_NUMBERS = "properties_panel_line_numbers";
 	private static final String UI_MANAGER = "ui_manager";
 	private static final String PRINT_PADDING = "print_padding";
 	private static final String PDF_EXPORT_FONT = "pdf_export_font";
@@ -84,6 +88,16 @@ public class ConfigHandler {
 		}
 
 		Config cfg = Config.getInstance();
+		cfg.setUiScale(getStringProperty(props, UI_SCALE, cfg.getUiScale())); // scaling must be initialized before calling initUiManager()
+
+		// #430: if uiScaling is enabled, no vm arg is set and if the scale is not Default, set the sysProp (Default sets no sysprop to allow future java releases to improve auto-detection)
+		if (Boolean.valueOf(System.getProperty("sun.java2d.uiScale.enabled", "true")) && System.getProperty("sun.java2d.uiScale") == null && !"Default".equals(cfg.getUiScale())) {
+			System.setProperty("sun.java2d.uiScale", cfg.getUiScale());
+		}
+
+		if (Program.getInstance().getRuntimeType() != RuntimeType.BATCH) { // batchmode shouldn't access UIManager.class
+			cfg.initUiManager();
+		}
 
 		cfg.setProgramVersion(getStringProperty(props, PROGRAM_VERSION, Program.getInstance().getVersion()));
 		cfg.setDefaultFontsize(getIntProperty(props, DEFAULT_FONTSIZE, cfg.getDefaultFontsize()));
@@ -94,6 +108,8 @@ public class ConfigHandler {
 		SharedConfig.getInstance().setShow_stickingpolygon(getBoolProperty(props, SHOW_STICKINGPOLYGON, SharedConfig.getInstance().isShow_stickingpolygon()));
 		cfg.setShow_grid(getBoolProperty(props, SHOW_GRID, cfg.isShow_grid()));
 		cfg.setEnable_custom_elements(getBoolProperty(props, ENABLE_CUSTOM_ELEMENTS, cfg.isEnable_custom_elements()));
+		cfg.setPropertiesPanelLineWrap(getBoolProperty(props, PROPERTIES_PANEL_LINE_WRAP, cfg.isPropertiesPanelLineWrap()));
+		cfg.setPropertiesPanelLineNumbers(getBoolProperty(props, PROPERTIES_PANEL_LINE_NUMBERS, cfg.isPropertiesPanelLineNumbers()));
 		cfg.setUiManager(getStringProperty(props, UI_MANAGER, cfg.getUiManager()));
 		cfg.setPrintPadding(getIntProperty(props, PRINT_PADDING, cfg.getPrintPadding()));
 		cfg.setPdfExportFont(getStringProperty(props, PDF_EXPORT_FONT, cfg.getPdfExportFont()));
@@ -165,6 +181,7 @@ public class ConfigHandler {
 			props.setProperty(PROGRAM_VERSION, Program.getInstance().getVersion());
 			props.setProperty(DEFAULT_FONTSIZE, Integer.toString(cfg.getDefaultFontsize()));
 			props.setProperty(PROPERTIES_PANEL_FONTSIZE, Integer.toString(cfg.getPropertiesPanelFontsize()));
+			props.setProperty(UI_SCALE, cfg.getUiScale());
 			props.setProperty(EXPORT_SCALE, Integer.toString(cfg.getExportScale()));
 			if (cfg.getExportDpi() != null) {
 				props.setProperty(EXPORT_DPI, Integer.toString(cfg.getExportDpi()));
@@ -173,6 +190,8 @@ public class ConfigHandler {
 			props.setProperty(SHOW_STICKINGPOLYGON, Boolean.toString(SharedConfig.getInstance().isShow_stickingpolygon()));
 			props.setProperty(SHOW_GRID, Boolean.toString(cfg.isShow_grid()));
 			props.setProperty(ENABLE_CUSTOM_ELEMENTS, Boolean.toString(cfg.isEnable_custom_elements()));
+			props.setProperty(PROPERTIES_PANEL_LINE_WRAP, Boolean.toString(cfg.isPropertiesPanelLineWrap()));
+			props.setProperty(PROPERTIES_PANEL_LINE_NUMBERS, Boolean.toString(cfg.isPropertiesPanelLineNumbers()));
 			props.setProperty(UI_MANAGER, cfg.getUiManager());
 			props.setProperty(PRINT_PADDING, Integer.toString(cfg.getPrintPadding()));
 			props.setProperty(PDF_EXPORT_FONT, cfg.getPdfExportFont());
@@ -259,10 +278,14 @@ public class ConfigHandler {
 		}
 	}
 
+	public static final String UMLET_CFG_PATH = "umlet.cfg.path";
+
 	private static Properties loadProperties() {
 		Properties result = new Properties();
-
-		if (Path.hasOsConformConfig()) {
+		if (System.getProperty(UMLET_CFG_PATH) != null) {
+			result = loadPropertiesFromFile(System.getProperty(UMLET_CFG_PATH));
+		}
+		else if (Path.hasOsConformConfig()) {
 			result = loadPropertiesFromFile(Path.osConformConfig());
 		}
 		else if (Path.hasLegacyConfig()) {
@@ -275,13 +298,8 @@ public class ConfigHandler {
 	private static Properties loadPropertiesFromFile(String filePath) {
 		Properties result = new Properties();
 
-		try {
-			FileInputStream inputStream = new FileInputStream(filePath);
-			try {
-				result.load(inputStream);
-			} finally {
-				inputStream.close();
-			}
+		try (FileInputStream inputStream = new FileInputStream(filePath)) {
+			result.load(inputStream);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}

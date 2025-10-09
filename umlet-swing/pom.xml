@@ -4,13 +4,14 @@
 	<parent>
 		<groupId>com.umlet</groupId>
 		<artifactId>umlet-parent</artifactId>
-		<version>15.1.0-SNAPSHOT</version>
+		<version>15.2.0-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>umlet-swing</artifactId>
 
 	<properties>
-		<batik.version>1.8</batik.version>
+		<batik.version>1.17</batik.version>
+		<flatleaf.version>3.3</flatleaf.version>
 	</properties>
 
 	<dependencies>
@@ -25,13 +26,9 @@
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>com.fifesoft</groupId>
 			<artifactId>autocomplete</artifactId>
-			<version>2.6.1</version>
+			<version>3.3.1</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.xmlgraphics</groupId>
@@ -96,17 +93,17 @@
 		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
-			<version>2.4</version>
+			<version>2.16.1</version>
 		</dependency>
 		<dependency>
 			<groupId>com.itextpdf</groupId>
 			<artifactId>itextpdf</artifactId>
-			<version>5.5.13</version>
+			<version>5.5.13.4</version>
 		</dependency>
 		<dependency>
 			<groupId>com.github.javaparser</groupId>
 			<artifactId>javaparser-core</artifactId>
-			<version>2.3.0</version>
+			<version>2.5.1</version> <!-- version3+ has backwards incompatible changes therefore only update if code is updated too -->
 		</dependency>
 		<dependency>
 			<groupId>org.sourceforge.jlibeps</groupId>
@@ -116,7 +113,7 @@
 		<dependency>
 			<groupId>com.sun.mail</groupId>
 			<artifactId>javax.mail</artifactId>
-			<version>1.5.6</version>
+			<version>1.6.2</version>
 			<exclusions>
 				<exclusion>
 					<artifactId>activation</artifactId>
@@ -127,17 +124,17 @@
 		<dependency>
 			<groupId>com.fifesoft</groupId>
 			<artifactId>rsyntaxtextarea</artifactId>
-			<version>2.6.1</version>
+			<version>3.5.1</version>
 		</dependency>
 		<dependency>
 			<groupId>org.eclipse.jdt</groupId>
 			<artifactId>ecj</artifactId>
-			<version>3.18.0</version>
+			<version>3.26.0</version> <!-- 3.27.0 and later versions cause errors during build, probably because they no longer work with java8 -->
 		</dependency>
 		<dependency>
 			<groupId>org.apache.bcel</groupId>
 			<artifactId>bcel</artifactId>
-			<version>5.2</version>
+			<version>6.10.0</version>
 			<exclusions>
 				<exclusion>
 					<artifactId>jakarta-regexp</artifactId>
@@ -148,7 +145,17 @@
 		<dependency>
 		    <groupId>org.mozilla</groupId>
 		    <artifactId>rhino</artifactId>
-		    <version>1.7.13</version>
+		    <version>1.7.15</version>
+		</dependency>
+		<dependency>
+			<groupId>com.formdev</groupId>
+			<artifactId>flatlaf</artifactId>
+			<version>${flatleaf.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.formdev</groupId>
+			<artifactId>flatlaf-extras</artifactId>
+			<version>${flatleaf.version}</version>
 		</dependency>
 	</dependencies>
 

@@ -23,9 +23,6 @@ import javax.swing.JScrollPane;
 import javax.swing.RepaintManager;
 import javax.swing.ScrollPaneConstants;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.baselet.control.basics.geom.Rectangle;
 import com.baselet.control.config.Config;
 import com.baselet.control.config.SharedConfig;
@@ -33,11 +30,15 @@ import com.baselet.control.constants.Constants;
 import com.baselet.control.enums.Program;
 import com.baselet.control.enums.RuntimeType;
 import com.baselet.control.util.Utils;
+import com.baselet.diagram.draw.helper.theme.ThemeFactory;
+import com.baselet.diagram.draw.helper.theme.ThemeFactory.THEMES;
 import com.baselet.element.interfaces.GridElement;
 import com.baselet.element.old.element.Relation;
 import com.baselet.gui.filedrop.FileDrop;
 import com.baselet.gui.filedrop.FileDropListener;
 import com.baselet.gui.listener.ScrollbarListener;
+import com.baselet.util.logging.Logger;
+import com.baselet.util.logging.LoggerFactory;
 
 @SuppressWarnings("serial")
 public class DrawPanel extends JLayeredPane implements Printable {
@@ -49,6 +50,8 @@ public class DrawPanel extends JLayeredPane implements Printable {
 	private final SelectorOld selector;
 	private final DiagramHandler handler;
 
+	StartUpHelpText startupHelpText;
+
 	private final List<GridElement> gridElements = new ArrayList<GridElement>();
 
 	public DrawPanel(DiagramHandler handler, boolean initStartupTextAndFiledrop) {
@@ -56,7 +59,14 @@ public class DrawPanel extends JLayeredPane implements Printable {
 		// AB: Origin is used to track diagram movement in Cut Command
 		origin = new Point();
 		setLayout(null);
-		setBackground(Color.WHITE);
+		if (Config.getInstance().getUiManager().equals(Constants.FLAT_DARCULA_THEME)) {
+			ThemeFactory.changeTheme(THEMES.DARK, null, true);
+			setBackground(Constants.DARK_BACKGROUND_COLOR);
+		}
+		else {
+			ThemeFactory.changeTheme(THEMES.LIGHT, null, true);
+			setBackground(Color.WHITE);
+		}
 		setOpaque(true);
 		selector = new SelectorOld(this);
 		JScrollPane p = new JScrollPane() {
@@ -94,7 +104,7 @@ public class DrawPanel extends JLayeredPane implements Printable {
 			}, 25, 25);
 
 			if (initStartupTextAndFiledrop) {
-				StartUpHelpText startupHelpText = new StartUpHelpText(this);
+				setStartupHelpText(new StartUpHelpText(this));
 				add(startupHelpText);
 				@SuppressWarnings("unused")
 				FileDrop fd = new FileDrop(startupHelpText, new FileDropListener()); // only init if this is not a BATCH call. Also fixes Issue 81
@@ -111,12 +121,25 @@ public class DrawPanel extends JLayeredPane implements Printable {
 		for (Component c : getComponents()) {
 			c.setEnabled(en);
 		}
-		if (en) {
-			setBackground(new Color(255, 255, 255));
+		if (Config.getInstance().getUiManager().equals(Constants.FLAT_DARCULA_THEME)) {
+			setBackground(Constants.DARK_BACKGROUND_COLOR);
 		}
 		else {
-			setBackground(new Color(235, 235, 235));
+			if (en) {
+				setBackground(Color.WHITE);
+			}
+			else {
+				setBackground(new Color(235, 235, 235));
+			}
 		}
+	}
+
+	public StartUpHelpText getStartupHelpText() {
+		return startupHelpText;
+	}
+
+	public void setStartupHelpText(StartUpHelpText startupHelpText) {
+		this.startupHelpText = startupHelpText;
 	}
 
 	public DiagramHandler getHandler() {
@@ -433,7 +456,12 @@ public class DrawPanel extends JLayeredPane implements Printable {
 	}
 
 	private void drawGrid(Graphics2D g2d) {
-		g2d.setColor(Constants.GRID_COLOR);
+		if (!Config.getInstance().getUiManager().equals(Constants.FLAT_DARCULA_THEME)) {
+			g2d.setColor(Constants.GRID_COLOR_LIGHT);
+		}
+		else {
+			g2d.setColor(Constants.GRID_COLOR_DARK);
+		}
 
 		int gridSize = handler.getGridSize();
 		if (gridSize == 1) {

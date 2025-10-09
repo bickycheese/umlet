@@ -12,21 +12,22 @@ import javax.swing.JPopupMenu;
 import javax.swing.UIManager;
 import javax.swing.plaf.InsetsUIResource;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.baselet.control.CanCloseProgram;
 import com.baselet.control.HandlerElementMap;
+import com.baselet.control.Main;
 import com.baselet.control.config.Config;
 import com.baselet.diagram.CustomPreviewHandler;
 import com.baselet.diagram.DiagramHandler;
 import com.baselet.diagram.DrawPanel;
 import com.baselet.element.facet.common.GroupFacet;
+import com.baselet.element.facet.common.LinkFacet;
 import com.baselet.element.interfaces.GridElement;
 import com.baselet.element.old.custom.CustomElement;
 import com.baselet.element.old.custom.CustomElementHandler;
 import com.baselet.gui.menu.MenuFactorySwing;
 import com.baselet.gui.pane.OwnSyntaxPane;
+import com.baselet.util.logging.Logger;
+import com.baselet.util.logging.LoggerFactory;
 
 public abstract class BaseGUI {
 
@@ -60,6 +61,10 @@ public abstract class BaseGUI {
 		MenuFactorySwing menuFactory = MenuFactorySwing.getInstance();
 
 		JPopupMenu contextMenu = new JPopupMenu();
+		GridElement editedGridElement = Main.getInstance().getEditedGridElement();
+		if ((editedGridElement != null) && (editedGridElement.getSetting(LinkFacet.LINK) != null)) {
+			contextMenu.add(menuFactory.createOpenLinkMenu());
+		}
 		if (e instanceof CustomElement) {
 			contextMenu.add(menuFactory.createEditSelected());
 		}

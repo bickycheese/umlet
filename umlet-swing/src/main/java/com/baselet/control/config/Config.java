@@ -6,14 +6,14 @@ import java.io.File;
 
 import javax.swing.UIManager;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.baselet.control.basics.geom.Dimension;
+import com.baselet.control.constants.Constants;
 import com.baselet.control.constants.SystemInfo;
 import com.baselet.control.enums.Os;
 import com.baselet.control.enums.Program;
 import com.baselet.control.enums.RuntimeType;
+import com.baselet.util.logging.Logger;
+import com.baselet.util.logging.LoggerFactory;
 
 public class Config {
 
@@ -52,26 +52,30 @@ public class Config {
 	private String defaultFontFamily = Font.SANS_SERIF;
 	private Integer defaultFontsize = 14;
 	private Integer propertiesPanelFontsize = 11;
+	private boolean propertiesPanelLineWrap = false;
+	private boolean propertiesPanelLineNumbers = false;
+	private String uiScale = "Default";
 	private Integer exportScale = 1;
 	private Integer exportDpi = null;
 
-	public Config() {
-		if (Program.getInstance().getRuntimeType() != RuntimeType.BATCH) { // batchmode shouldn't access UIManager.class
-			initUiManager();
-		}
-	}
-
-	private void initUiManager() {
+	public void initUiManager() {
 		// The default MacOS theme looks ugly, therefore we set metal
 		if (SystemInfo.OS == Os.MAC) {
 			uiManager = "javax.swing.plaf.metal.MetalLookAndFeel";
+			addFlatLafThemes();
 		}
 		else if (Program.getInstance().getRuntimeType() == RuntimeType.ECLIPSE_PLUGIN && UIManager.getSystemLookAndFeelClassName().equals("com.sun.java.swing.plaf.gtk.GTKLookAndFeel")) {
 			uiManager = "javax.swing.plaf.metal.MetalLookAndFeel";
 		}
 		else {
 			uiManager = UIManager.getSystemLookAndFeelClassName();
+			addFlatLafThemes();
 		}
+	}
+
+	private void addFlatLafThemes() {
+		UIManager.installLookAndFeel("Flat Darcula", Constants.FLAT_DARCULA_THEME);
+		UIManager.installLookAndFeel("Flat Light", Constants.FLAT_LIGHT_THEME);
 	}
 
 	public String getUiManager() {
@@ -277,6 +281,30 @@ public class Config {
 
 	public void setPropertiesPanelFontsize(Integer propertiesPanelFontsize) {
 		this.propertiesPanelFontsize = propertiesPanelFontsize;
+	}
+
+	public boolean isPropertiesPanelLineWrap() {
+		return propertiesPanelLineWrap;
+	}
+
+	public void setPropertiesPanelLineWrap(boolean propertiesPanelLineWrap) {
+		this.propertiesPanelLineWrap = propertiesPanelLineWrap;
+	}
+
+	public boolean isPropertiesPanelLineNumbers() {
+		return propertiesPanelLineNumbers;
+	}
+
+	public void setPropertiesPanelLineNumbers(boolean propertiesPanelLineNumbers) {
+		this.propertiesPanelLineNumbers = propertiesPanelLineNumbers;
+	}
+
+	public String getUiScale() {
+		return uiScale;
+	}
+
+	public void setUiScale(String uiScale) {
+		this.uiScale = uiScale;
 	}
 
 	public Integer getExportScale() {
